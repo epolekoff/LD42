@@ -14,10 +14,10 @@ public class Player : MonoBehaviour
     private const float MaxJumpForce = 60000f;
     private const float MinGravity = 100f;
     private const float MaxGravity = 3000f;
-    private const float MinMovementSpeed = 400f;
-    private const float MaxMovementSpeed = 12000f;
-    private const float MinMoveVelocity = 4f;
-    private const float MaxMoveVelocity = 120f;
+    private const float MinMovementSpeed = 300f;
+    private const float MaxMovementSpeed = 9000f;
+    private const float MinMoveVelocity = 3f;
+    private const float MaxMoveVelocity = 90f;
 
     // Camera
     private float sensitivityX = 3F;
@@ -31,7 +31,7 @@ public class Player : MonoBehaviour
     private float rotationY = 0F;
 
     // Jumping
-    private string[] GroundLayers = new string[] { "Ground" };
+    private string[] GroundLayers = new string[] { "Ground", "HeldItem" };
     private bool m_onGround = false;
 
     // Growing/Shrink
@@ -45,7 +45,7 @@ public class Player : MonoBehaviour
     // Items
     private const float MinHeldItemBoundsRatio = 0.1f;
     private const float MaxHeldItemBoundsRatio = 0.3f;
-    private const float PickupItemDistance = 2f;
+    private const float PickupItemDistance = 4f;
     private HeldItem m_heldItem;
 
     // Use this for initialization
@@ -64,6 +64,7 @@ public class Player : MonoBehaviour
         HandleMovement();
         HandleDroppingItems();
         HandlePickingUpItems();
+        HandlePressingButtons();
     }
 
     /// <summary>
@@ -152,7 +153,7 @@ public class Player : MonoBehaviour
         {
             HeldItem lookedAtItem = hitInfo.transform.GetComponent<HeldItem>();
 
-            if(CanPickUpItemBasedOnScale(lookedAtItem))
+            if(CanSelectItemBasedOnScale(lookedAtItem))
             {
                 selectedItem = lookedAtItem;
                 lookedAtItem.SetSelectionVisual(true);
@@ -191,6 +192,34 @@ public class Player : MonoBehaviour
     }
 
     /// <summary>
+    /// Handle selecting buttons.
+    /// </summary>
+    private void HandlePressingButtons()
+    {
+        // Look at a button
+        RaycastHit hitInfo;
+        if (Physics.Raycast(PlayerCamera.transform.position, PlayerCamera.transform.forward, out hitInfo, PickupItemDistance * Scale, LayerMask.GetMask("GrowButton")))
+        {
+            GrowButton lookedAtItem = hitInfo.transform.GetComponent<GrowButton>();
+
+            if (CanSelectItemBasedOnScale(lookedAtItem))
+            {
+                lookedAtItem.SetSelectionVisual(true);
+
+                // If a valid item is looked at, you can pick it up with a button.
+                if (Input.GetButtonDown("Grab"))
+                {
+                    PressButton(lookedAtItem);
+                }
+            }
+            else
+            {
+                lookedAtItem.SetSelectionVisual(false);
+            }
+        }
+    }
+
+    /// <summary>
     /// Pick up an item.
     /// </summary>
     /// <param name="item"></param>
@@ -219,10 +248,15 @@ public class Player : MonoBehaviour
         m_heldItem = null;
     }
 
+    private void PressButton(SelectableItem item)
+    {
+        item.GetComponent<GrowButton>().Press();
+    }
+
     /// <summary>
     /// Can I pick it up.
     /// </summary>
-    private bool CanPickUpItemBasedOnScale(HeldItem item)
+    private bool CanSelectItemBasedOnScale(SelectableItem item)
     {
         float itemBounds = item.GetMaxBounds();
 

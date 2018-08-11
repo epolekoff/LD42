@@ -7,7 +7,10 @@ public class GameManager : Singleton<GameManager> {
     public Player Player;
     public Room Room;
 
-    public float GameTime;
+    public Color SelectionColorPositive;
+    public Color SelectionColorNegative;
+
+    public float GameTime { get; set; }
 
 	// Use this for initialization
 	void Start ()
