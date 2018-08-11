@@ -38,14 +38,14 @@ public class Player : MonoBehaviour
     private const float GrowSpeed = 10f;
     private const float ShrinkSpeed = 10f;
     private const float MinScale = 1f;
-    private const float MaxScale = 100f;
+    private const float MaxScale = 200f;
     public float Scale { get { return transform.localScale.x; } }
     public float ScaleRatio { get { return (Scale - MinScale) / (MaxScale - MinScale); } }
 
     // Items
-    private const float MinHeldItemBoundsRatio = 0.015f;
+    private const float MinHeldItemBoundsRatio = 0.02f;
     private const float MaxHeldItemBoundsRatio = 0.3f;
-    private const float PickupItemDistance = 4f;
+    private const float PickupItemDistance = 2f;
     private HeldItem m_heldItem;
     private bool m_grabbedThisFrame = false;
 

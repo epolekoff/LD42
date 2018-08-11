@@ -6,7 +6,7 @@ public class Room : MonoBehaviour {
 
     private const float ScaleRate = 0.01f;
     private const float MaxScale = 1f;
-    private const float MinScale = 0.1f;
+    private const float MinScale = 0.5f;
 
     private bool m_growing = false;
     private const float GrowTime = 2f;
@@ -35,8 +35,11 @@ public class Room : MonoBehaviour {
             return;
         }
 
-        // Shrink constantly
-        transform.localScale -= Vector3.one * ScaleRate * Time.deltaTime;
+        if(Scale > MinScale)
+        {
+            // Shrink constantly
+            transform.localScale -= Vector3.one * ScaleRate * Time.deltaTime;
+        }
 
         // If we hit the player, stop shrinking? Shrink the player?
     }
