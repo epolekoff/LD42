@@ -21,6 +21,13 @@ public class GameManager : Singleton<GameManager> {
 	// Update is called once per frame
 	void Update ()
     {
+        // Increment game time.
         GameTime += Time.deltaTime;
+
+        // Quit the game
+        if(Input.GetKeyDown(KeyCode.Escape))
+        {
+            Application.Quit();
+        }
 	}
 }

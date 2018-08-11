@@ -15,7 +15,7 @@ public class SelectableItem : MonoBehaviour {
     protected bool m_isSelected;
 
     /// <summary>
-    /// update
+    /// Update
     /// </summary>
     void Update()
     {
