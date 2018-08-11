@@ -41,11 +41,23 @@ public class Room : MonoBehaviour {
         // If we hit the player, stop shrinking? Shrink the player?
     }
 
+    /// <summary>
+    /// Grow the room when a button is pressed.
+    /// </summary>
+    /// <param name="newScale"></param>
     public void GrowToScale(float newScale)
     {
-
+        if(Scale < newScale)
+        {
+            StartCoroutine(GrowToScaleCoroutine(newScale));
+        }
     }
 
+    /// <summary>
+    /// Lerp the growth of the room.
+    /// </summary>
+    /// <param name="newScale"></param>
+    /// <returns></returns>
     private IEnumerator GrowToScaleCoroutine(float newScale)
     {
         m_growing = true;

@@ -7,9 +7,10 @@ public class SelectableItem : MonoBehaviour {
     protected const float MinScale = 1f;
     protected const float MaxScale = 100f;
     public float Scale { get { return transform.localScale.x; } }
+    public float WorldScale { get { return transform.lossyScale.x; } }
     public float ScaleRatio { get { return (Scale - MinScale) / (MaxScale - MinScale); } }
 
-    private const float SelectionOutlineSize = 1f;
+    private const float SelectionOutlineSize = 0.1f;
     private Color DeselectedColor = new Color(1, 1, 1, 1);
     protected bool m_isSelected;
 
@@ -34,7 +35,7 @@ public class SelectableItem : MonoBehaviour {
     /// <returns></returns>
     public float GetMaxBounds()
     {
-        Vector3 bounds = GetComponent<Renderer>().bounds.size * transform.localScale.x;
+        Vector3 bounds = GetComponent<Renderer>().bounds.size * WorldScale;
         return Mathf.Max(Mathf.Max(bounds.x, bounds.y), bounds.z);
     }
 
@@ -45,7 +46,7 @@ public class SelectableItem : MonoBehaviour {
 	public void SetSelectionVisual(bool canSelect)
     {
         m_isSelected = true;
-        GetComponent<Renderer>().material.SetFloat("_Outline", SelectionOutlineSize * Scale);
+        GetComponent<Renderer>().material.SetFloat("_OutlineWidth", SelectionOutlineSize);
         GetComponent<Renderer>().material.SetColor("_OutlineColor",
             canSelect ?
             GameManager.Instance.SelectionColorPositive :
@@ -57,7 +58,7 @@ public class SelectableItem : MonoBehaviour {
     /// </summary>
     private void Deselect()
     {
-        GetComponent<Renderer>().material.SetFloat("_Outline", 0);
+        GetComponent<Renderer>().material.SetFloat("_OutlineWidth", 0);
         GetComponent<Renderer>().material.SetColor("_OutlineColor", DeselectedColor);
     }
 }

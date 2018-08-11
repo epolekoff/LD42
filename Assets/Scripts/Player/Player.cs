@@ -43,10 +43,11 @@ public class Player : MonoBehaviour
     public float ScaleRatio { get { return (Scale - MinScale) / (MaxScale - MinScale); } }
 
     // Items
-    private const float MinHeldItemBoundsRatio = 0.1f;
+    private const float MinHeldItemBoundsRatio = 0.015f;
     private const float MaxHeldItemBoundsRatio = 0.3f;
     private const float PickupItemDistance = 4f;
     private HeldItem m_heldItem;
+    private bool m_grabbedThisFrame = false;
 
     // Use this for initialization
     void Start ()
@@ -58,6 +59,7 @@ public class Player : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
     {
+        m_grabbedThisFrame = false;
         CheckGround();
         RotateCameraAndCapsule(PlayerCamera);
         HandleSize();
@@ -169,8 +171,9 @@ public class Player : MonoBehaviour
         }
 
         // If a valid item is looked at, you can pick it up with a button.
-        if(Input.GetButtonDown("Grab"))
+        if(Input.GetButtonDown("Grab") && !m_grabbedThisFrame)
         {
+            m_grabbedThisFrame = true;
             PickUpItem(selectedItem);
         }
     }
@@ -185,8 +188,9 @@ public class Player : MonoBehaviour
             return;
         }
 
-        if (Input.GetButtonDown("Grab"))
+        if (Input.GetButtonDown("Grab") && !m_grabbedThisFrame)
         {
+            m_grabbedThisFrame = true;
             DropItem();
         }
     }
@@ -207,8 +211,9 @@ public class Player : MonoBehaviour
                 lookedAtItem.SetSelectionVisual(true);
 
                 // If a valid item is looked at, you can pick it up with a button.
-                if (Input.GetButtonDown("Grab"))
+                if (Input.GetButtonDown("Grab") && !m_grabbedThisFrame)
                 {
+                    m_grabbedThisFrame = true;
                     PressButton(lookedAtItem);
                 }
             }
