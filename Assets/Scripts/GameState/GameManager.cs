@@ -6,11 +6,14 @@ public class GameManager : Singleton<GameManager> {
 
     public Player Player;
     public Room Room;
+    public GameCanvas GameCanvas;   
 
     public Color SelectionColorPositive;
     public Color SelectionColorNegative;
 
     public float GameTime { get; set; }
+    public bool GameActive { get { return m_gameActive; } }
+    private bool m_gameActive = true;
 
 	// Use this for initialization
 	void Start ()
@@ -22,7 +25,10 @@ public class GameManager : Singleton<GameManager> {
 	void Update ()
     {
         // Increment game time.
-        GameTime += Time.deltaTime;
+        if(m_gameActive)
+        {
+            GameTime += Time.deltaTime;
+        }
 
         // Quit the game
         if(Input.GetKeyDown(KeyCode.Escape))
@@ -30,4 +36,13 @@ public class GameManager : Singleton<GameManager> {
             Application.Quit();
         }
 	}
+
+    /// <summary>
+    /// Winning the game.
+    /// </summary>
+    public void WinGame()
+    {
+        m_gameActive = false;
+        GameCanvas.PlayWinAnimation();
+    }
 }

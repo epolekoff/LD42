@@ -4,15 +4,18 @@ using UnityEngine;
 
 public class Room : MonoBehaviour {
 
-    private const float ScaleRate = 0.005f;
+    private const float ScaleRate = 0.01f;
     private const float MaxScale = 3f;
     private const float MinScale = 0.1f;
+    private const float MaxForcePlayerScale = 1.2f;
+    private const float MinForcePlayerScale = 0.1f;
 
     private bool m_growing = false;
     private const float GrowTime = 2f;
 
     public float Scale { get { return transform.localScale.x; } }
     public float ScaleRatio { get { return (Scale - MinScale) / (MaxScale - MinScale); } }
+    public float ForcePlayerScaleRatio { get { return (Scale - MinForcePlayerScale) / (MaxForcePlayerScale - MinForcePlayerScale); } }
 
     // Use this for initialization
     void Start () {
@@ -22,7 +25,7 @@ public class Room : MonoBehaviour {
 	// Update is called once per frame
 	void Update ()
     {
-        HandleShrinking();
+        //HandleShrinking();
     }
 
     /// <summary>
@@ -42,6 +45,12 @@ public class Room : MonoBehaviour {
         }
 
         // If we hit the player, stop shrinking? Shrink the player?
+        if(!m_growing && 
+            ScaleRatio != 0 &&
+            ForcePlayerScaleRatio < GameManager.Instance.Player.ScaleRatio)
+        {
+            GameManager.Instance.Player.ForceScaleDown(ForcePlayerScaleRatio);
+        }
     }
 
     /// <summary>

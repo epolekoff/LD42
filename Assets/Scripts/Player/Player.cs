@@ -35,12 +35,13 @@ public class Player : MonoBehaviour
     private bool m_onGround = false;
 
     // Growing/Shrink
-    private const float GrowSpeed = 10f;
-    private const float ShrinkSpeed = 10f;
+    private const float MinGrowSpeed = 10f;
+    private const float MaxGrowSpeed = 40f;
     private const float MinScale = 1f;
     private const float MaxScale = 200f;
     public float Scale { get { return transform.localScale.x; } }
     public float ScaleRatio { get { return (Scale - MinScale) / (MaxScale - MinScale); } }
+    private const float HeadRaycastDistance = 1f;
 
     // Items
     private const float MinHeldItemBoundsRatio = 0.02f;
@@ -59,14 +60,20 @@ public class Player : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
     {
+        if (!GameManager.Instance.GameActive)
+        {
+            return;
+        }
+
         m_grabbedThisFrame = false;
+
         CheckGround();
         RotateCameraAndCapsule(PlayerCamera);
         HandleSize();
         HandleMovement();
+        HandlePressingButtons();
         HandleDroppingItems();
         HandlePickingUpItems();
-        HandlePressingButtons();
     }
 
     /// <summary>
@@ -79,6 +86,16 @@ public class Player : MonoBehaviour
         {
             transform.position = Vector3.zero;
             transform.localScale = Vector3.one;
+        }
+
+        if (col.gameObject.layer == LayerMask.NameToLayer("MouseDoor") && m_heldItem != null && m_heldItem.name == "SilverKey")
+        {
+            col.gameObject.transform.parent.GetComponent<MouseDoor>().Open();
+        }
+
+        if (col.gameObject.layer == LayerMask.NameToLayer("ExitDoor") && m_heldItem != null && m_heldItem.name == "GoldKey")
+        {
+            GameManager.Instance.WinGame();
         }
     }
 
@@ -141,13 +158,14 @@ public class Player : MonoBehaviour
     /// </summary>
     private void HandleSize()
     {
-        if(Input.GetButton("Grow") && transform.localScale.x < MaxScale)
+        float growSpeed = Mathf.Lerp(MinGrowSpeed, MaxGrowSpeed, ScaleRatio);
+        if(Input.GetButton("Grow") && transform.localScale.x < MaxScale && CanGrow())
         {
-            transform.localScale += Vector3.one * GrowSpeed * Time.deltaTime;
+            transform.localScale += Vector3.one * growSpeed * Time.deltaTime;
         }
         else if (Input.GetButton("Shrink") && transform.localScale.x > MinScale)
         {
-            transform.localScale -= Vector3.one * ShrinkSpeed * Time.deltaTime;
+            transform.localScale -= Vector3.one * growSpeed * Time.deltaTime;
         }
     }
 
@@ -163,12 +181,17 @@ public class Player : MonoBehaviour
 
         // Look at an item.
         HeldItem selectedItem = null;
+        bool tooBig = false;
         RaycastHit hitInfo;
         if(Physics.Raycast(PlayerCamera.transform.position, PlayerCamera.transform.forward, out hitInfo, PickupItemDistance * Scale, LayerMask.GetMask("HeldItem")))
         {
             HeldItem lookedAtItem = hitInfo.transform.GetComponent<HeldItem>();
-
-            if(CanSelectItemBasedOnScale(lookedAtItem))
+            if(lookedAtItem == null)
+            {
+                lookedAtItem = hitInfo.transform.GetComponentInParent<HeldItem>();
+            }
+            
+            if(CanSelectItemBasedOnScale(lookedAtItem, out tooBig))
             {
                 selectedItem = lookedAtItem;
                 lookedAtItem.SetSelectionVisual(true);
@@ -178,16 +201,20 @@ public class Player : MonoBehaviour
                 lookedAtItem.SetSelectionVisual(false);
             }
         }
-        if(selectedItem == null)
-        {
-            return;
-        }
 
         // If a valid item is looked at, you can pick it up with a button.
         if(Input.GetButtonDown("Grab") && !m_grabbedThisFrame)
         {
             m_grabbedThisFrame = true;
-            PickUpItem(selectedItem);
+
+            if (selectedItem == null)
+            {
+                GameManager.Instance.GameCanvas.PlayGrabFailAnimation(tooBig);
+            }
+            else
+            {
+                PickUpItem(selectedItem);
+            }
         }
     }
 
@@ -215,24 +242,41 @@ public class Player : MonoBehaviour
     {
         // Look at a button
         RaycastHit hitInfo;
-        if (Physics.Raycast(PlayerCamera.transform.position, PlayerCamera.transform.forward, out hitInfo, PickupItemDistance * Scale, LayerMask.GetMask("GrowButton")))
+        if (Physics.Raycast(PlayerCamera.transform.position, PlayerCamera.transform.forward, out hitInfo, PickupItemDistance * Scale, LayerMask.GetMask("GrowButton", "HeldItem")))
         {
             GrowButton lookedAtItem = hitInfo.transform.GetComponent<GrowButton>();
 
-            if (CanSelectItemBasedOnScale(lookedAtItem))
+            if (lookedAtItem != null)
             {
-                lookedAtItem.SetSelectionVisual(true);
-
-                // If a valid item is looked at, you can pick it up with a button.
-                if (Input.GetButtonDown("Grab") && !m_grabbedThisFrame)
+                bool tooBig = false;
+                if(CanSelectItemBasedOnScale(lookedAtItem, out tooBig))
                 {
-                    m_grabbedThisFrame = true;
-                    PressButton(lookedAtItem);
+                    // If a valid item is looked at, you can pick it up with a button.
+                    if (Input.GetButtonDown("Grab") && !m_grabbedThisFrame)
+                    {
+                        m_grabbedThisFrame = true;
+                        PressButton(lookedAtItem);
+                    }
+
+                    lookedAtItem.SetSelectionVisual(true);
                 }
+                else
+                {
+                    // If an invalid item is looked at, do the animation
+                    if (Input.GetButtonDown("Grab") && !m_grabbedThisFrame)
+                    {
+                        m_grabbedThisFrame = true;
+                        GameManager.Instance.GameCanvas.PlayGrabFailAnimation(tooBig);
+                    }
+
+                    lookedAtItem.SetSelectionVisual(false);
+                }
+
+                
             }
-            else
+            else if(lookedAtItem != null)
             {
-                lookedAtItem.SetSelectionVisual(false);
+                
             }
         }
     }
@@ -274,7 +318,7 @@ public class Player : MonoBehaviour
     /// <summary>
     /// Can I pick it up.
     /// </summary>
-    private bool CanSelectItemBasedOnScale(SelectableItem item)
+    private bool CanSelectItemBasedOnScale(SelectableItem item, out bool tooBig)
     {
         float itemBounds = item.GetMaxBounds();
 
@@ -283,6 +327,29 @@ public class Player : MonoBehaviour
 
         float boundsRatio = itemBounds / selfBounds;
         Debug.Log(string.Format("Bounds Ratio: {0} Self Bounds: {1} Item Bounds: {2}", boundsRatio, selfBounds, itemBounds));
+        tooBig = boundsRatio < MinHeldItemBoundsRatio;
         return boundsRatio <= MaxHeldItemBoundsRatio && boundsRatio >= MinHeldItemBoundsRatio;
+    }
+
+    /// <summary>
+    /// Can grow
+    /// </summary>
+    private bool CanGrow()
+    {
+        if(Physics.Raycast(PlayerCamera.transform.position, Vector3.up, HeadRaycastDistance))
+        {
+            return false;
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// Room can force the player to scale down.
+    /// </summary>
+    /// <param name="newRatio"></param>
+    public void ForceScaleDown(float newRatio)
+    {
+        float newScale = Mathf.Lerp(MinScale, MaxScale, newRatio);
+        transform.localScale = Vector3.one * newScale;
     }
 }
