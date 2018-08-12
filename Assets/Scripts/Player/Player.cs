@@ -10,10 +10,10 @@ public class Player : MonoBehaviour
     public Renderer Visual;
 
     // Movement
-    private const float MinJumpForce = 2000f;
-    private const float MaxJumpForce = 60000f;
-    private const float MinGravity = 100f;
-    private const float MaxGravity = 3000f;
+    private const float MinJumpForce = 2500f;
+    private const float MaxJumpForce = 75000f;
+    private const float MinGravity = 90f;
+    private const float MaxGravity = 2700f;
     private const float MinMovementSpeed = 300f;
     private const float MaxMovementSpeed = 9000f;
     private const float MinMoveVelocity = 3f;
@@ -31,7 +31,7 @@ public class Player : MonoBehaviour
     private float rotationY = 0F;
 
     // Jumping
-    private string[] GroundLayers = new string[] { "Ground", "HeldItem" };
+    private string[] GroundLayers = new string[] { "Ground", "HeldItem", "Obstacle" };
     private bool m_onGround = false;
 
     // Growing/Shrink
@@ -67,6 +67,19 @@ public class Player : MonoBehaviour
         HandleDroppingItems();
         HandlePickingUpItems();
         HandlePressingButtons();
+    }
+
+    /// <summary>
+    /// Check collisions with things.
+    /// </summary>
+    /// <param name="col"></param>
+    void OnTriggerEnter(Collider col)
+    {
+        if (col.gameObject.layer == LayerMask.NameToLayer("KillPlane"))
+        {
+            transform.position = Vector3.zero;
+            transform.localScale = Vector3.one;
+        }
     }
 
     /// <summary>
