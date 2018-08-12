@@ -45,7 +45,7 @@ public class Player : MonoBehaviour
     // Items
     private const float MinHeldItemBoundsRatio = 0.02f;
     private const float MaxHeldItemBoundsRatio = 0.3f;
-    private const float PickupItemDistance = 2f;
+    private const float PickupItemDistance = 2.5f;
     private HeldItem m_heldItem;
     private bool m_grabbedThisFrame = false;
 

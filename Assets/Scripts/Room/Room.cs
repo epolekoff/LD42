@@ -5,7 +5,7 @@ using UnityEngine;
 public class Room : MonoBehaviour {
 
     private const float ScaleRate = 0.005f;
-    private const float MaxScale = 10f;
+    private const float MaxScale = 3f;
     private const float MinScale = 0.1f;
 
     private bool m_growing = false;
