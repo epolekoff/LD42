@@ -25,8 +25,17 @@ public class GameCanvas : MonoBehaviour {
         EscapeTimer.GetComponent<Animator>().enabled = true;
     }
 
-    public void PlayGrabFailAnimation(bool tooBig)
+    public void PlayGrabFailAnimation(GrabFailReason reason)
     {
-        Reticle.GetComponent<Animator>().SetTrigger(tooBig ? "big" : "small");
+        string animation = "";
+        if (reason == GrabFailReason.Big)
+        {
+            animation = "big";
+        }
+        else if(reason == GrabFailReason.Small)
+        {
+            animation = "small";
+        }
+        Reticle.GetComponent<Animator>().SetTrigger(animation);
     }
 }

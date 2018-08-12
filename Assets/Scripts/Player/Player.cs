@@ -2,6 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum GrabFailReason
+{
+    Big,
+    Small,
+    Range,
+}
+
 public class Player : MonoBehaviour
 {
     public Transform GroundCollisionCheckPoint;
@@ -181,7 +188,7 @@ public class Player : MonoBehaviour
 
         // Look at an item.
         HeldItem selectedItem = null;
-        bool tooBig = false;
+        GrabFailReason reason = GrabFailReason.Range;
         RaycastHit hitInfo;
         if(Physics.Raycast(PlayerCamera.transform.position, PlayerCamera.transform.forward, out hitInfo, PickupItemDistance * Scale, LayerMask.GetMask("HeldItem")))
         {
@@ -191,7 +198,7 @@ public class Player : MonoBehaviour
                 lookedAtItem = hitInfo.transform.GetComponentInParent<HeldItem>();
             }
             
-            if(CanSelectItemBasedOnScale(lookedAtItem, out tooBig))
+            if(CanSelectItemBasedOnScale(lookedAtItem, out reason))
             {
                 selectedItem = lookedAtItem;
                 lookedAtItem.SetSelectionVisual(true);
@@ -209,7 +216,7 @@ public class Player : MonoBehaviour
 
             if (selectedItem == null)
             {
-                GameManager.Instance.GameCanvas.PlayGrabFailAnimation(tooBig);
+                GameManager.Instance.GameCanvas.PlayGrabFailAnimation(reason);
             }
             else
             {
@@ -248,8 +255,8 @@ public class Player : MonoBehaviour
 
             if (lookedAtItem != null)
             {
-                bool tooBig = false;
-                if(CanSelectItemBasedOnScale(lookedAtItem, out tooBig))
+                GrabFailReason reason = GrabFailReason.Range;
+                if(CanSelectItemBasedOnScale(lookedAtItem, out reason))
                 {
                     // If a valid item is looked at, you can pick it up with a button.
                     if (Input.GetButtonDown("Grab") && !m_grabbedThisFrame)
@@ -266,7 +273,7 @@ public class Player : MonoBehaviour
                     if (Input.GetButtonDown("Grab") && !m_grabbedThisFrame)
                     {
                         m_grabbedThisFrame = true;
-                        GameManager.Instance.GameCanvas.PlayGrabFailAnimation(tooBig);
+                        GameManager.Instance.GameCanvas.PlayGrabFailAnimation(reason);
                     }
 
                     lookedAtItem.SetSelectionVisual(false);
@@ -318,7 +325,7 @@ public class Player : MonoBehaviour
     /// <summary>
     /// Can I pick it up.
     /// </summary>
-    private bool CanSelectItemBasedOnScale(SelectableItem item, out bool tooBig)
+    private bool CanSelectItemBasedOnScale(SelectableItem item, out GrabFailReason reason)
     {
         float itemBounds = item.GetMaxBounds();
 
@@ -327,7 +334,16 @@ public class Player : MonoBehaviour
 
         float boundsRatio = itemBounds / selfBounds;
         Debug.Log(string.Format("Bounds Ratio: {0} Self Bounds: {1} Item Bounds: {2}", boundsRatio, selfBounds, itemBounds));
-        tooBig = boundsRatio < MinHeldItemBoundsRatio;
+
+        reason = GrabFailReason.Range;
+        if (boundsRatio < MinHeldItemBoundsRatio)
+        {
+            reason = GrabFailReason.Big;
+        }
+        else if(boundsRatio > MaxHeldItemBoundsRatio)
+        {
+            reason = GrabFailReason.Small;
+        }
         return boundsRatio <= MaxHeldItemBoundsRatio && boundsRatio >= MinHeldItemBoundsRatio;
     }
 

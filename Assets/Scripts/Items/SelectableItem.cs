@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class SelectableItem : MonoBehaviour {
 
-    protected const float MinScale = 1f;
+    protected const float MinScale = 0.1f;
     protected const float MaxScale = 100f;
     public float Scale { get { return transform.localScale.x; } }
     public float WorldScale { get { return transform.lossyScale.x; } }
@@ -17,7 +17,7 @@ public class SelectableItem : MonoBehaviour {
     /// <summary>
     /// Update
     /// </summary>
-    void Update()
+    public virtual void Update()
     {
         if (!m_isSelected)
         {
